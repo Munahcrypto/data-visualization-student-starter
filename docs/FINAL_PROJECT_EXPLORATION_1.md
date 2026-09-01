@@ -2,7 +2,7 @@
 
 ## Topic / Domain
 
-For my final project, I am interested in exploring financial markets and the relationship between inflation, interest rates, and consumer spending in the United States. I think this topic could work well for an interactive visualization because these economic indicators change over time and often interact in ways that are difficult to understand by looking at numbers alone.
+For my final project, I am interested in exploring U.S. economic conditions and the relationship between inflation, interest rates, and consumer spending.
 
 At this stage, I am not committed to one specific visualization. I would like to experiment with different ways of showing how changes in the economy relate to changes in consumer behavior and financial conditions.
 
