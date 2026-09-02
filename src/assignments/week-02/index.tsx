@@ -9,7 +9,7 @@ export const Week02 = () => {
   const [data, setData] = useState<CPIData[]>([]);
 
   useEffect(() => {
-    fetch('/data/cpi/CPIAUCSL.csv')
+    fetch(`${import.meta.env.BASE_URL}data/cpi/CPIAUCSL.csv`)
       .then((response) => response.text())
       .then((text) => {
         const lines = text.trim().split('\n');
