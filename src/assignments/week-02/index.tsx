@@ -13,14 +13,17 @@ export const Week02 = () => {
       .then((response) => response.text())
       .then((text) => {
         const lines = text.trim().split('\n');
-        const rows = lines.slice(1).map((line) => {
-          const [observation_date, value] = line.split(',');
+        const rows = lines
+  .slice(1)
+  .map((line) => {
+    const [observation_date, value] = line.split(',');
 
-          return {
-            observation_date,
-            CPIAUCSL: Number(value),
-          };
-        });
+    return {
+      observation_date,
+      CPIAUCSL: Number(value),
+    };
+  })
+  .filter((row) => row.observation_date && row.CPIAUCSL > 0);
 
         setData(rows);
       });
