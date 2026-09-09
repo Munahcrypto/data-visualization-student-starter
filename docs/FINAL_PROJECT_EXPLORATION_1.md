@@ -93,3 +93,39 @@ Instead of only viewing the entire timeline, users could select a specific econo
 At this stage, I am most interested in the interactive dashboard and economic period explorer ideas. The dashboard would make it possible to compare several indicators at the same time, while the period explorer could help users understand what happened during important economic events.
 
 For the final project, I may combine these ideas into an interactive economic dashboard where users can filter the data by date and explore specific periods such as the 2008 financial crisis, COVID-19, and the post-COVID inflation period. I still want to experiment with the datasets and visualization techniques before deciding on the final design.
+
+## Task Analysis
+
+The main goal of my project is to help users explore how inflation, consumer spending, and interest rates have changed over time and understand how these economic indicators may relate to one another. Rather than focusing on a specific type of chart, the visualization should support the following tasks:
+
+### Identify Trends Over Time
+
+Users should be able to identify long-term and short-term trends in inflation, consumer spending, and interest rates. For example, they should be able to determine when inflation increased rapidly or when consumer spending experienced significant changes.
+
+### Compare Economic Indicators
+
+Users should be able to compare the behavior of different economic indicators during the same time periods. This could help determine whether changes in inflation are accompanied by changes in consumer spending or interest rates.
+
+### Identify Significant Changes
+
+The visualization should help users locate periods where economic indicators changed unusually quickly or moved away from their typical patterns. These periods could then be examined more closely to understand what was happening in the economy.
+
+### Explore Major Economic Events
+
+Users should be able to examine how inflation, consumer spending, and interest rates behaved during important economic periods such as the 2008 financial crisis, the COVID-19 pandemic, and the post-COVID inflation period. This would allow users to compare how different economic events affected the indicators.
+
+### Examine Relationships Between Variables
+
+Another important task is determining whether relationships exist between the economic indicators. For example, users should be able to investigate whether periods of higher inflation tend to coincide with changes in consumer spending or interest rates.
+
+### Compare Different Time Periods
+
+Users should be able to compare economic conditions across different periods. For example, they could compare the 2008 financial crisis with the COVID-19 period to determine whether inflation, consumer spending, and interest rates responded in similar or different ways.
+
+### Identify Outliers and Unusual Patterns
+
+The visualization should make it possible to identify observations or periods that differ substantially from the overall trend. These unusual patterns may reveal economic events or changes that deserve further investigation.
+
+### Overall User Goal
+
+Ultimately, the visualization should help users move beyond simply viewing economic data and allow them to discover patterns, make comparisons, and develop a better understanding of how inflation, consumer spending, and interest rates interact over time.
