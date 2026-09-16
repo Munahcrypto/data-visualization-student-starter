@@ -129,3 +129,39 @@ The visualization should make it possible to identify observations or periods th
 ### Overall User Goal
 
 Ultimately, the visualization should help users move beyond simply viewing economic data and allow them to discover patterns, make comparisons, and develop a better understanding of how inflation, consumer spending, and interest rates interact over time.
+
+## Validation
+
+For this project, I can use the Four Levels of Validation to make sure that I am not only creating a visualization that looks good, but also one that answers a meaningful question and is useful to the people viewing it.
+
+### 1. Domain Situation
+
+The main domain of my project is the U.S. economy, specifically the relationship between inflation, interest rates, and consumer spending. An ideal user could be a student, consumer, financial analyst, or anyone interested in understanding how changes in economic conditions affect consumer behavior.
+
+The main problem I want to help users understand is how consumer spending changes when inflation rises or falls and when the Federal Reserve changes interest rates. To validate this level, I would ask potential users whether these are questions they would actually find useful and whether the visualization helps them better understand economic conditions.
+
+### 2. Task and Data Abstraction
+
+The main data attributes in my project are time, Consumer Price Index (CPI), Federal Funds Rate, and consumer spending or retail sales. Time is a temporal attribute, while CPI, interest rates, and spending are quantitative attributes.
+
+The main tasks are to identify trends over time, compare different economic indicators, find periods of unusually large change, and examine possible relationships between inflation, interest rates, and consumer spending. For example, a user should be able to compare what happened to spending during periods of high inflation or after major changes in interest rates.
+
+I would validate this level by checking whether the data and tasks I selected actually support the questions I want users to answer. I would also make sure that the FRED series are appropriate and that differences in units or time periods do not create misleading comparisons.
+
+### 3. Visual Encoding and Interaction
+
+At this level, I would focus on whether the information is presented in a way that users can understand easily. My current CPI visualization uses position and a line over time to show changes in the index. As the project develops, I could incorporate the other economic variables and allow users to compare their patterns.
+
+Possible interactions could include hovering over the visualization to see exact values and dates, selecting a specific time period, or choosing which economic indicators to compare. Important periods such as the 2008 financial crisis and the COVID-19 pandemic could also be highlighted to provide context.
+
+I would validate the design by asking users to complete simple tasks, such as identifying when CPI increased rapidly or comparing changes in inflation and consumer spending. If users struggle to interpret the visualization, I would revise the labels, visual encodings, layout, or interactions.
+
+### 4. Algorithm
+
+The final level focuses on whether the visualization works correctly and efficiently. The project needs to load and process the FRED data correctly and display the visualization without unnecessary delays.
+
+I would test the application to make sure that the data loads properly, missing values are handled appropriately, and interactions respond correctly. I would also check the visualization at different screen sizes and make sure that adding multiple economic indicators does not noticeably slow down the page.
+
+### Overall Validation
+
+Applying these four levels will help me evaluate the project from more than just a visual perspective. I need to make sure I am addressing a useful economic question, using the appropriate data and tasks, presenting the information clearly, and implementing the visualization reliably. As the project develops, I can use feedback from classmates and potential users to improve each of these areas.
