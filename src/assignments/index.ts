@@ -3,6 +3,7 @@ import { ResponsivePseudoScatterPlot } from './week-01/ResponsivePseudoScatterPl
 import { Week02 } from './week-02';
 import { Week03 } from './week-03';
 import { Week04 } from './week-04';
+import { Week05 } from './week-05';
 
 export interface Assignment {
   id: string;
@@ -30,6 +31,11 @@ export const assignments: Assignment[] = [
     id: '4',
     name: 'Week 4',
     component: Week04,
+  },
+  {
+    id: '5',
+    name: 'Week 5',
+    component: Week05,
   },
 ];
 
