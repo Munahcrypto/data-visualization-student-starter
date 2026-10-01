@@ -1,6 +1,6 @@
 import { assignmentsMap, defaultAssignment } from './assignments';
 
-export const App = () => {
+const App = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const example = searchParams.get('example');
 
@@ -13,43 +13,69 @@ export const App = () => {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: '220px 1fr',
+        gridTemplateColumns: '220px minmax(0, 1fr)',
         minHeight: '100vh',
+        fontFamily: 'Arial, Helvetica, sans-serif',
+        background: '#ffffff',
       }}
     >
+      {/* Sidebar */}
       <nav
         style={{
-          borderRight: '1px solid #ddd',
-          padding: '20px 14px',
-          background: '#fff',
+          borderRight: '1px solid #e5e7eb',
+          padding: '22px 14px',
+          background: '#ffffff',
+          minHeight: '100vh',
         }}
       >
-        <h3 style={{ marginTop: 0 }}>Assignments</h3>
+        <h3
+          style={{
+            margin: '0 0 20px 6px',
+            fontSize: '18px',
+            fontWeight: 700,
+            color: '#111827',
+          }}
+        >
+          Assignments
+        </h3>
 
-        {Array.from(assignmentsMap.values()).map((item) => (
-          <a
-            key={item.id}
-            href={`?example=${item.id}`}
-            style={{
-              display: 'block',
-              padding: '12px 10px',
-              marginBottom: '4px',
-              textDecoration: 'none',
-              color: '#111',
-              borderRadius: '6px',
-              background:
-                assignment.id === item.id ? '#f0f1f3' : 'transparent',
-              fontWeight: assignment.id === item.id ? 700 : 400,
-            }}
-          >
-            {item.name}
-          </a>
-        ))}
+        {Array.from(assignmentsMap.values()).map((item) => {
+          const isActive = assignment.id === item.id;
+
+          return (
+            <a
+              key={item.id}
+              href={`?example=${item.id}`}
+              style={{
+                display: 'block',
+                padding: '12px 14px',
+                marginBottom: '6px',
+                textDecoration: 'none',
+                color: isActive ? '#111827' : '#374151',
+                borderRadius: '8px',
+                background: isActive ? '#f3f4f6' : 'transparent',
+                fontWeight: isActive ? 700 : 500,
+                transition: 'background 0.2s ease',
+              }}
+            >
+              {item.name}
+            </a>
+          );
+        })}
       </nav>
 
-      <main style={{ minWidth: 0 }}>
+      {/* Assignment Content */}
+      <main
+        style={{
+          minWidth: 0,
+          width: '100%',
+          overflowX: 'auto',
+        }}
+      >
         <AssignmentComponent />
       </main>
     </div>
   );
 };
+
+export default App;
