@@ -1,70 +1,55 @@
-import { useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
-import { assignments, assignmentsMap, defaultAssignment } from './assignments';
+import { assignmentsMap, defaultAssignment } from './assignments';
 
-function App() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const selectedAssignmentId = searchParams.get('example') || defaultAssignment;
-  const selectedAssignment = assignmentsMap.get(selectedAssignmentId);
-  const SelectedComponent = selectedAssignment?.component;
-  const hideSidebar = searchParams.has('hideSidebar');
+export const App = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const example = searchParams.get('example');
 
-  const handleSelectAssignment = useCallback(
-    (assignmentId: string) => {
-      setSearchParams({ example: assignmentId });
-    },
-    [setSearchParams],
-  );
+  const assignment =
+    (example ? assignmentsMap.get(example) : undefined) ?? defaultAssignment;
 
-  const toggleSidebar = useCallback(() => {
-    const newParams = new URLSearchParams(searchParams);
-    if (newParams.has('hideSidebar')) {
-      newParams.delete('hideSidebar');
-    } else {
-      newParams.set('hideSidebar', 'true');
-    }
-    setSearchParams(newParams);
-  }, [searchParams, setSearchParams]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        toggleSidebar();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleSidebar]);
+  const AssignmentComponent = assignment.component;
 
   return (
-    <div className="w-screen h-screen flex bg-white">
-      {/* Left Sidebar - Navigation */}
-      {!hideSidebar && (
-        <div className="w-[250px] border-r border-gray-300 p-4 overflow-y-auto">
-          <h2 className="text-lg font-semibold mb-4">Assignments</h2>
-          <nav className="space-y-2">
-            {assignments.map((assignment) => (
-              <button
-                key={assignment.id}
-                onClick={() => handleSelectAssignment(assignment.id)}
-                className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                  selectedAssignmentId === assignment.id ? 'font-bold bg-gray-100' : 'hover:bg-gray-50'
-                }`}
-              >
-                {assignment.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-      )}
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '220px 1fr',
+        minHeight: '100vh',
+      }}
+    >
+      <nav
+        style={{
+          borderRight: '1px solid #ddd',
+          padding: '20px 14px',
+          background: '#fff',
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>Assignments</h3>
 
-      {/* Right Content - Visualization */}
-      <div className="flex-1 flex items-center justify-center overflow-auto">
-        {SelectedComponent ? <SelectedComponent /> : <div>Example not found</div>}
-      </div>
+        {Array.from(assignmentsMap.values()).map((item) => (
+          <a
+            key={item.id}
+            href={`?example=${item.id}`}
+            style={{
+              display: 'block',
+              padding: '12px 10px',
+              marginBottom: '4px',
+              textDecoration: 'none',
+              color: '#111',
+              borderRadius: '6px',
+              background:
+                assignment.id === item.id ? '#f0f1f3' : 'transparent',
+              fontWeight: assignment.id === item.id ? 700 : 400,
+            }}
+          >
+            {item.name}
+          </a>
+        ))}
+      </nav>
+
+      <main style={{ minWidth: 0 }}>
+        <AssignmentComponent />
+      </main>
     </div>
   );
-}
-
-export default App;
+};
