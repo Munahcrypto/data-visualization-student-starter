@@ -45,8 +45,8 @@ export const assignments: Assignment[] = [
   },
 ];
 
-export const assignmentsMap = new Map(
+export const assignmentsMap = new Map<string, Assignment>(
   assignments.map((assignment) => [assignment.id, assignment]),
 );
 
-export const defaultAssignment = assignments[0];
+export const defaultAssignment: Assignment = assignments[0];
