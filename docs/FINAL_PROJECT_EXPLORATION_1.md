@@ -269,3 +269,25 @@ At this point, my goal is to build an interactive U.S. economic dashboard that h
 The project has progressed from a broad idea about economic indicators to a more specific interactive experience. My Week 4 visualization established a clearer visual foundation, while my Week 5 CPI explorer allowed me to experiment with the type of interaction I want in the final project.
 
 My next step will be to integrate the additional economic datasets and determine which linked views provide the clearest and most useful way to answer the questions identified in my Task Analysis.
+
+# Project V1 – Week 6
+
+## U.S. Economic Conditions Dashboard
+
+For Project V1, I developed the first working version of my **U.S. Economic Conditions Dashboard**. This version builds on the CPI visualizations and interactions I developed in earlier assignments and moves the project closer to the North Star dashboard proposed in my updated sketches.
+
+The current V1 focuses on inflation using the U.S. Consumer Price Index (CPI). Users can explore several important economic periods, including the **1970s inflation period, the 2008 financial crisis, COVID-19, and the post-COVID period**.
+
+The dashboard currently includes:
+
+- Interactive economic-period selection
+- A CPI time-series visualization
+- Hover interaction for inspecting monthly observations
+- Dynamic summary indicators showing the selected period, starting CPI, ending CPI, and percentage change
+- Context explaining how inflation will eventually be connected with interest rates and consumer spending
+
+### Project V1
+
+[View the interactive Week 6 dashboard](https://munahcrypto.github.io/data-visualization-student-starter/?example=6)
+
+This V1 establishes the main structure and interaction approach for the final project. My next step is to integrate the **Federal Funds Rate** and **Retail Sales** so that users can compare inflation, interest rates, and consumer spending within the same dashboard. I also plan to strengthen the connections between the visualizations so that selecting a time period or economic event updates multiple views together.
