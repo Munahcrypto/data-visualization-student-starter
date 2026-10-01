@@ -49,4 +49,4 @@ export const assignmentsMap = new Map(
   assignments.map((assignment) => [assignment.id, assignment]),
 );
 
-export const defaultAssignment = assignments[0];
+export const defaultAssignment = '1';
