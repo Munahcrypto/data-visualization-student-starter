@@ -5,6 +5,7 @@ import { Week03 } from './week-03';
 import { Week04 } from './week-04';
 import { Week05 } from './week-05';
 import { Week06 } from './week-06';
+import { Week07 } from './week-07';
 
 export interface Assignment {
   id: string;
@@ -42,6 +43,11 @@ export const assignments: Assignment[] = [
     id: '6',
     name: 'Week 6',
     component: Week06,
+  },
+  {
+    id: '7',
+    name: 'Week 7',
+    component: Week07,
   },
 ];
 
