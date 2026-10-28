@@ -1,12 +1,14 @@
 
 import { useMemo, useState } from 'react';
-import * as d3 from 'd3';
+import type { MouseEvent } from 'react';
 
 type Observation = {
   year: number;
   cpi: number;
   inflation: number;
 };
+
+type Metric = 'cpi' | 'inflation';
 
 type Period = {
   label: string;
@@ -22,33 +24,36 @@ const periods: Period[] = [
   { label: 'Post-COVID', start: 2021, end: 2025 },
 ];
 
-// Illustrative annual observations for demonstrating linked interaction.
-// These are not official FRED observations.
-const data: Observation[] = Array.from({ length: 56 }, (_, i) => {
-  const year = 1970 + i;
-  const t = i / 55;
+// Illustrative data for demonstrating interaction.
+// These are NOT official economic observations.
+const data: Observation[] = Array.from(
+  { length: 56 },
+  (_, i): Observation => {
+    const year = 1970 + i;
+    const t = i / 55;
 
-  const cpi =
-    38.8 +
-    275 * Math.pow(t, 1.55) +
-    5 * Math.sin(i * 0.34) +
-    (year >= 2021 ? (year - 2020) * 2.2 : 0);
+    const cpi =
+      38.8 +
+      275 * Math.pow(t, 1.55) +
+      5 * Math.sin(i * 0.34) +
+      (year >= 2021 ? (year - 2020) * 2.2 : 0);
 
-  const inflation =
-    2.8 +
-    8.2 * Math.exp(-Math.pow((year - 1980) / 4.2, 2)) +
-    3.5 * Math.exp(-Math.pow((year - 2022) / 1.7, 2)) -
-    2.4 * Math.exp(-Math.pow((year - 2009) / 1.5, 2)) +
-    0.8 * Math.sin(i * 0.65);
+    const inflation =
+      2.8 +
+      8.2 * Math.exp(-Math.pow((year - 1980) / 4.2, 2)) +
+      3.5 * Math.exp(-Math.pow((year - 2022) / 1.7, 2)) -
+      2.4 * Math.exp(-Math.pow((year - 2009) / 1.5, 2)) +
+      0.8 * Math.sin(i * 0.65);
 
-  return {
-    year,
-    cpi: Math.round(cpi * 10) / 10,
-    inflation: Math.round(inflation * 10) / 10,
-  };
-});
+    return {
+      year,
+      cpi: Math.round(cpi * 10) / 10,
+      inflation: Math.round(inflation * 10) / 10,
+    };
+  }
+);
 
-const palette = {
+const colors = {
   background: '#071326',
   panel: '#102039',
   border: '#253a58',
@@ -61,7 +66,7 @@ const palette = {
 
 type ChartProps = {
   observations: Observation[];
-  metric: 'cpi' | 'inflation';
+  metric: Metric;
   highlightedYear: number | null;
   onHighlight: (year: number | null) => void;
 };
@@ -72,122 +77,206 @@ function EconomicChart({
   highlightedYear,
   onHighlight,
 }: ChartProps) {
-  const width = 760;
-  const height = 270;
-  const margin = { top: 20, right: 30, bottom: 38, left: 58 };
-  const innerWidth = width - margin.left - margin.right;
-  const innerHeight = height - margin.top - margin.bottom;
+  const width = 700;
+  const height = 300;
 
-  const color = metric === 'cpi' ? palette.cyan : palette.purple;
+  const margin = {
+    top: 25,
+    right: 25,
+    bottom: 45,
+    left: 65,
+  };
+
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+
   const title =
-    metric === 'cpi' ? 'Consumer Price Index' : 'Annual Inflation Rate';
+    metric === 'cpi'
+      ? 'U.S. Consumer Price Index'
+      : 'U.S. Annual Inflation Rate';
 
-  const x = d3
-    .scaleLinear()
-    .domain(d3.extent(observations, d => d.year) as [number, number])
-    .range([margin.left, width - margin.right]);
+  const color =
+    metric === 'cpi' ? colors.cyan : colors.purple;
 
-  const maxValue = d3.max(observations, d => d[metric]) ?? 10;
-  const minValue = Math.min(0, d3.min(observations, d => d[metric]) ?? 0);
+  const years = observations.map((d) => d.year);
+  const values = observations.map((d) => d[metric]);
 
-  const y = d3
-    .scaleLinear()
-    .domain([minValue, maxValue * 1.12])
-    .range([height - margin.bottom, margin.top]);
+  const minYear = Math.min(...years);
+  const maxYear = Math.max(...years);
 
-  const line = d3
-    .line<Observation>()
-    .x(d => x(d.year))
-    .y(d => y(d[metric]))
-    .curve(d3.curveMonotoneX);
+  const minValue = Math.min(0, ...values);
+  const maxValue = Math.max(...values);
 
-  const selected = observations.find(d => d.year === highlightedYear);
+  const yMaximum = maxValue > 0 ? maxValue * 1.12 : 1;
 
-  const format = (value: number) =>
-    metric === 'cpi' ? value.toFixed(1) : `${value.toFixed(1)}%`;
+  const x = (year: number): number =>
+    margin.left +
+    ((year - minYear) / Math.max(1, maxYear - minYear)) *
+      plotWidth;
 
-  const handleMove = (event: React.MouseEvent<SVGRectElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const mouseX = ((event.clientX - rect.left) / rect.width) * width;
-    const year = x.invert(mouseX);
-    const closest = d3.least(
-      observations,
-      d => Math.abs(d.year - year)
+  const y = (value: number): number =>
+    height -
+    margin.bottom -
+    ((value - minValue) /
+      Math.max(1, yMaximum - minValue)) *
+      plotHeight;
+
+  const linePath = observations
+    .map(
+      (d, i) =>
+        `${i === 0 ? 'M' : 'L'} ${x(d.year)} ${y(d[metric])}`
+    )
+    .join(' ');
+
+  const selected = observations.find(
+    (d) => d.year === highlightedYear
+  );
+
+  const format = (value: number): string =>
+    metric === 'cpi'
+      ? value.toFixed(1)
+      : `${value.toFixed(1)}%`;
+
+  const yTicks = Array.from(
+    { length: 5 },
+    (_, i) =>
+      minValue + ((yMaximum - minValue) * i) / 4
+  );
+
+  const xTicks = Array.from(
+    { length: 5 },
+    (_, i) =>
+      Math.round(minYear + ((maxYear - minYear) * i) / 4)
+  );
+
+  const handleMove = (
+    event: MouseEvent<SVGRectElement>
+  ) => {
+    const rect =
+      event.currentTarget.getBoundingClientRect();
+
+    const relativeX =
+      (event.clientX - rect.left) / rect.width;
+
+    const targetYear =
+      minYear + relativeX * (maxYear - minYear);
+
+    const closest = observations.reduce(
+      (best, current) =>
+        Math.abs(current.year - targetYear) <
+        Math.abs(best.year - targetYear)
+          ? current
+          : best,
+      observations[0]
     );
-    onHighlight(closest?.year ?? null);
+
+    onHighlight(closest.year);
   };
 
   return (
     <div
       style={{
-        background: palette.panel,
-        border: `1px solid ${palette.border}`,
+        background: colors.panel,
+        border: `1px solid ${colors.border}`,
         borderRadius: 18,
         padding: 20,
         minWidth: 0,
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
         <div>
-          <div style={{ color: palette.white, fontWeight: 700, fontSize: 17 }}>
+          <h3
+            style={{
+              margin: 0,
+              color: colors.white,
+              fontSize: 18,
+            }}
+          >
             {title}
-          </div>
-          <div style={{ color: palette.muted, fontSize: 12, marginTop: 5 }}>
-            Hover over either chart to highlight the same year in both.
-          </div>
+          </h3>
+
+          <p
+            style={{
+              color: colors.muted,
+              fontSize: 12,
+              marginTop: 7,
+            }}
+          >
+            Hover to explore linked economic values.
+          </p>
         </div>
-        <span style={{ color, fontSize: 12, fontWeight: 700 }}>
+
+        <span
+          style={{
+            color,
+            fontWeight: 800,
+            fontSize: 12,
+          }}
+        >
           {metric === 'cpi' ? 'INDEX' : 'PERCENT'}
         </span>
       </div>
 
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        style={{ width: '100%', marginTop: 18, overflow: 'visible' }}
+        style={{
+          width: '100%',
+          display: 'block',
+          marginTop: 14,
+        }}
         role="img"
-        aria-label={`${title} interactive line chart`}
+        aria-label={title}
       >
-        {y.ticks(5).map(tick => (
-          <g key={tick}>
+        {yTicks.map((tick: number, i: number) => (
+          <g key={i}>
             <line
               x1={margin.left}
               x2={width - margin.right}
               y1={y(tick)}
               y2={y(tick)}
-              stroke="#2a405c"
+              stroke="#30445f"
               strokeDasharray="4 6"
             />
+
             <text
               x={margin.left - 12}
               y={y(tick) + 4}
+              fill={colors.muted}
+              fontSize={11}
               textAnchor="end"
-              fill={palette.muted}
-              fontSize="11"
             >
               {format(tick)}
             </text>
           </g>
         ))}
 
-        {x.ticks(6).map(tick => (
+        {xTicks.map((tick: number, i: number) => (
           <text
-            key={tick}
+            key={i}
             x={x(tick)}
             y={height - 12}
+            fill={colors.muted}
+            fontSize={11}
             textAnchor="middle"
-            fill={palette.muted}
-            fontSize="11"
           >
-            {Math.round(tick)}
+            {tick}
           </text>
         ))}
 
         <path
-          d={line(observations) ?? ''}
+          d={linePath}
           fill="none"
           stroke={color}
           strokeWidth={3}
           strokeLinecap="round"
+          strokeLinejoin="round"
         />
 
         {selected && (
@@ -197,26 +286,41 @@ function EconomicChart({
               x2={x(selected.year)}
               y1={margin.top}
               y2={height - margin.bottom}
-              stroke={palette.white}
+              stroke={colors.white}
               strokeDasharray="5 5"
-              opacity={0.65}
+              opacity={0.7}
             />
+
             <circle
               cx={x(selected.year)}
               cy={y(selected[metric])}
               r={7}
               fill={color}
-              stroke={palette.white}
+              stroke={colors.white}
               strokeWidth={3}
             />
+
+            <text
+              x={x(selected.year)}
+              y={Math.max(
+                margin.top + 10,
+                y(selected[metric]) - 18
+              )}
+              textAnchor="middle"
+              fill={colors.white}
+              fontSize={13}
+              fontWeight={700}
+            >
+              {format(selected[metric])}
+            </text>
           </g>
         )}
 
         <rect
           x={margin.left}
           y={margin.top}
-          width={innerWidth}
-          height={innerHeight}
+          width={plotWidth}
+          height={plotHeight}
           fill="transparent"
           style={{ cursor: 'crosshair' }}
           onMouseMove={handleMove}
@@ -227,15 +331,18 @@ function EconomicChart({
       <div
         style={{
           background: '#192d4a',
-          padding: '12px 14px',
+          padding: 14,
           borderRadius: 10,
-          color: selected ? palette.white : palette.muted,
           fontSize: 13,
-          minHeight: 20,
+          color: selected
+            ? colors.white
+            : colors.muted,
         }}
       >
         {selected
-          ? `${selected.year}  |  ${title}: ${format(selected[metric])}`
+          ? `${selected.year} | ${title}: ${format(
+              selected[metric]
+            )}`
           : 'Move your cursor across the chart to inspect a year.'}
       </div>
     </div>
@@ -243,36 +350,69 @@ function EconomicChart({
 }
 
 export function Week10() {
-  const [activePeriod, setActivePeriod] = useState('All Years');
-  const [highlightedYear, setHighlightedYear] = useState<number | null>(null);
+  const [activePeriod, setActivePeriod] =
+    useState('All Years');
 
-  const period = periods.find(p => p.label === activePeriod) ?? periods[0];
+  const [highlightedYear, setHighlightedYear] =
+    useState<number | null>(null);
+
+  const period =
+    periods.find((p) => p.label === activePeriod) ??
+    periods[0];
 
   const filtered = useMemo(
-    () => data.filter(d => d.year >= period.start && d.year <= period.end),
+    () =>
+      data.filter(
+        (d) =>
+          d.year >= period.start &&
+          d.year <= period.end
+      ),
     [period.start, period.end]
   );
 
   const first = filtered[0];
   const last = filtered[filtered.length - 1];
 
-  const cpiChange = first && last
-    ? ((last.cpi / first.cpi - 1) * 100).toFixed(1)
-    : '0';
+  const cpiChange =
+    first && last
+      ? ((last.cpi / first.cpi - 1) * 100).toFixed(1)
+      : '0';
 
-  const highlighted = filtered.find(d => d.year === highlightedYear);
+  const highlighted = filtered.find(
+    (d) => d.year === highlightedYear
+  );
 
-  const card = (label: string, value: string, color: string) => (
+  const card = (
+    label: string,
+    value: string,
+    color: string
+  ) => (
     <div
       style={{
-        background: palette.panel,
-        border: `1px solid ${palette.border}`,
+        background: colors.panel,
+        border: `1px solid ${colors.border}`,
         borderRadius: 14,
-        padding: 19,
+        padding: 20,
       }}
     >
-      <div style={{ color: palette.muted, fontSize: 12 }}>{label}</div>
-      <div style={{ color, fontSize: 25, fontWeight: 800, marginTop: 9 }}>
+      <div
+        style={{
+          color: colors.muted,
+          fontSize: 12,
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </div>
+
+      <div
+        style={{
+          color,
+          fontSize: 25,
+          fontWeight: 800,
+          marginTop: 10,
+        }}
+      >
         {value}
       </div>
     </div>
@@ -281,17 +421,22 @@ export function Week10() {
   return (
     <div
       style={{
-        background: palette.background,
-        color: palette.white,
+        background: colors.background,
+        color: colors.white,
         minHeight: '100vh',
         padding: '38px 24px 70px',
         fontFamily: 'Inter, Arial, sans-serif',
       }}
     >
-      <div style={{ maxWidth: 1150, margin: '0 auto' }}>
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+        }}
+      >
         <div
           style={{
-            color: palette.cyan,
+            color: colors.cyan,
             letterSpacing: 2,
             fontSize: 12,
             fontWeight: 800,
@@ -300,26 +445,38 @@ export function Week10() {
           WEEK 10 · INTERACTIVE DATA VISUALIZATION
         </div>
 
-        <h1 style={{ fontSize: 'clamp(28px, 4vw, 44px)', margin: '12px 0' }}>
+        <h1
+          style={{
+            fontSize: 'clamp(28px, 4vw, 44px)',
+            margin: '12px 0',
+          }}
+        >
           U.S. Economic Explorer
         </h1>
 
         <p
           style={{
-            color: palette.muted,
+            color: colors.muted,
             lineHeight: 1.7,
-            maxWidth: 780,
+            maxWidth: 850,
             marginBottom: 24,
           }}
         >
-          Explore how consumer prices and inflation evolve across major
-          economic periods. This iteration introduces linked highlighting:
-          hovering over either visualization reveals the corresponding year
-          across both charts.
+          Travel through major economic periods and
+          explore changes in consumer prices and inflation.
+          This iteration introduces linked highlighting,
+          interactive tooltips, and synchronized economic
+          insights across two visualizations.
         </p>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
-          {periods.map(p => (
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
+          {periods.map((p) => (
             <button
               key={p.label}
               onClick={() => {
@@ -327,13 +484,15 @@ export function Week10() {
                 setHighlightedYear(null);
               }}
               style={{
-                border: `1px solid ${palette.border}`,
+                border: `1px solid ${colors.border}`,
                 borderRadius: 9,
-                padding: '11px 15px',
+                padding: '12px 16px',
                 cursor: 'pointer',
                 background:
-                  activePeriod === p.label ? '#1766c5' : palette.panel,
-                color: palette.white,
+                  activePeriod === p.label
+                    ? '#1766c5'
+                    : colors.panel,
+                color: colors.white,
                 fontWeight: 700,
               }}
             >
@@ -345,21 +504,42 @@ export function Week10() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(190px, 1fr))',
             gap: 13,
             marginTop: 24,
           }}
         >
-          {card('SELECTED PERIOD', activePeriod, palette.cyan)}
-          {card('STARTING CPI', first?.cpi.toFixed(1) ?? '—', palette.purple)}
-          {card('ENDING CPI', last?.cpi.toFixed(1) ?? '—', palette.green)}
-          {card('CPI CHANGE', `${cpiChange}%`, palette.cyan)}
+          {card(
+            'SELECTED PERIOD',
+            activePeriod,
+            colors.cyan
+          )}
+
+          {card(
+            'STARTING CPI',
+            first?.cpi.toFixed(1) ?? '—',
+            colors.purple
+          )}
+
+          {card(
+            'ENDING CPI',
+            last?.cpi.toFixed(1) ?? '—',
+            colors.green
+          )}
+
+          {card(
+            'CPI CHANGE',
+            `${cpiChange}%`,
+            colors.cyan
+          )}
         </div>
 
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(min(100%, 440px), 1fr))',
             gap: 18,
             marginTop: 22,
           }}
@@ -370,6 +550,7 @@ export function Week10() {
             highlightedYear={highlightedYear}
             onHighlight={setHighlightedYear}
           />
+
           <EconomicChart
             observations={filtered}
             metric="inflation"
@@ -381,8 +562,8 @@ export function Week10() {
         <div
           style={{
             background: '#142b48',
-            border: `1px solid ${palette.border}`,
-            borderLeft: `4px solid ${palette.cyan}`,
+            border: `1px solid ${colors.border}`,
+            borderLeft: `4px solid ${colors.cyan}`,
             borderRadius: 14,
             padding: 22,
             marginTop: 22,
@@ -395,73 +576,134 @@ export function Week10() {
           </h3>
 
           {highlighted ? (
-            <p style={{ color: palette.muted, lineHeight: 1.7, margin: 0 }}>
-              In {highlighted.year}, the illustrative CPI is{' '}
-              <strong style={{ color: palette.cyan }}>
+            <p
+              style={{
+                color: colors.muted,
+                lineHeight: 1.7,
+                margin: 0,
+              }}
+            >
+              In {highlighted.year}, the illustrative
+              Consumer Price Index was{' '}
+              <strong style={{ color: colors.cyan }}>
                 {highlighted.cpi.toFixed(1)}
-              </strong>{' '}
-              and the illustrative annual inflation rate is{' '}
-              <strong style={{ color: palette.purple }}>
+              </strong>
+              , while the illustrative inflation rate was{' '}
+              <strong style={{ color: colors.purple }}>
                 {highlighted.inflation.toFixed(1)}%
               </strong>
-              . Both charts highlight the same year, allowing direct
-              comparison of price levels and annual inflation.
+              . Both visualizations highlight the same
+              year to make comparisons easier.
             </p>
           ) : (
-            <p style={{ color: palette.muted, lineHeight: 1.7, margin: 0 }}>
-              Move your cursor across either line chart. The corresponding
-              year is highlighted simultaneously in both charts, and the
-              economic snapshot updates automatically. Select an economic
-              period above to explore a different historical window.
+            <p
+              style={{
+                color: colors.muted,
+                lineHeight: 1.7,
+                margin: 0,
+              }}
+            >
+              Hover over either chart to activate linked
+              highlighting. The same year will be marked
+              on both visualizations, and this economic
+              snapshot will update automatically.
             </p>
           )}
         </div>
 
         <div
           style={{
-            marginTop: 22,
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(230px, 1fr))',
             gap: 14,
+            marginTop: 22,
           }}
         >
           {[
-            ['01 · LINKED HIGHLIGHTING', 'Both charts share the same highlighted year, helping users compare economic indicators.'],
-            ['02 · INTERACTIVE TOOLTIPS', 'Hover interactions reveal the year and corresponding economic value.'],
-            ['03 · PERIOD EXPLORATION', 'Filter the dashboard to examine major economic events and historical patterns.'],
-          ].map(([heading, description]) => (
+            {
+              heading: '01 · LINKED HIGHLIGHTING',
+              description:
+                'Hovering over one chart highlights the corresponding year in both charts.',
+            },
+            {
+              heading: '02 · INTERACTIVE TOOLTIPS',
+              description:
+                'The selected year and economic value update as users explore the timeline.',
+            },
+            {
+              heading: '03 · PERIOD EXPLORATION',
+              description:
+                'Users can compare different historical periods using interactive filters.',
+            },
+          ].map((item) => (
             <div
-              key={heading}
+              key={item.heading}
               style={{
-                padding: 19,
-                border: `1px solid ${palette.border}`,
+                background: colors.panel,
+                border: `1px solid ${colors.border}`,
                 borderRadius: 13,
-                background: palette.panel,
+                padding: 20,
               }}
             >
-              <div style={{ color: palette.cyan, fontSize: 12, fontWeight: 800 }}>
-                {heading}
+              <div
+                style={{
+                  color: colors.cyan,
+                  fontSize: 12,
+                  fontWeight: 800,
+                }}
+              >
+                {item.heading}
               </div>
-              <p style={{ color: palette.muted, lineHeight: 1.6, fontSize: 13 }}>
-                {description}
+
+              <p
+                style={{
+                  color: colors.muted,
+                  fontSize: 13,
+                  lineHeight: 1.7,
+                }}
+              >
+                {item.description}
               </p>
             </div>
           ))}
         </div>
 
-        <p
+        <div
           style={{
-            color: palette.muted,
-            fontSize: 11,
-            marginTop: 25,
-            lineHeight: 1.6,
+            marginTop: 24,
+            padding: 18,
+            border: `1px solid ${colors.border}`,
+            borderRadius: 12,
+            color: colors.muted,
+            fontSize: 12,
+            lineHeight: 1.8,
           }}
         >
-          Data note: This prototype uses illustrative annual values to
-          demonstrate interaction. Values should not be interpreted as
-          official economic statistics. Official reference series:
-          FRED CPIAUCSL and the U.S. Bureau of Labor Statistics.
-        </p>
+          <strong style={{ color: colors.white }}>
+            Data and methodology note
+          </strong>
+
+          <p style={{ marginBottom: 0 }}>
+            This prototype uses simulated annual economic
+            observations to demonstrate interactive
+            visualization techniques. The values are
+            illustrative and should not be interpreted
+            as official economic statistics.
+            For official U.S. consumer price data,
+            see the Federal Reserve Economic Data
+            series CPIAUCSL.
+          </p>
+
+          <a
+            href="https://fred.stlouisfed.org/series/CPIAUCSL"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: colors.cyan }}
+          >
+            View official CPI data on FRED
+          </a>
+        </div>
       </div>
     </div>
   );
